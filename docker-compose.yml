@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+
+  dbmywallet:
+    image: mongo:noble
+    container_name: mywalletdbmongousers
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    ports:
+      - 27017:27017
+    volumes:
+      - db_data:/data/db
+    networks:
+      - mywallet
+
+volumes:
+  db_data:
+
+networks:
+  mywallet:
+    driver: bridge

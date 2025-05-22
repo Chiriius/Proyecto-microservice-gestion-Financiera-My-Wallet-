@@ -3,27 +3,27 @@ package jwt
 import (
 	"errors"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 // Documentar valor por defecto
 const defaultExpirationTimeToken = 30
 
 func GenerateToken(email string, logger logrus.FieldLogger) (string, string, error) {
-	dir, err := os.Getwd()
-	//rootDir := filepath.Join(dir, "../..")
-	envPath := filepath.Join(dir, ".env") //For container replace rootDir for dir and for local use rootDIr
-	viper.SetConfigFile(envPath)
-	key := viper.GetString("SECRET_KEY")
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		logrus.Warn("Layer: jwt ", "Error al cargar el archivo .env:", err)
+	}
+
+	key := os.Getenv("SECRET_KEY")
 	secretKey := []byte(key)
 
-	expirationTimeStr := viper.GetString("TIME_TOKEN")
+	expirationTimeStr := os.Getenv("TIME_TOKEN")
 	expirationTimeDuration, err := strconv.Atoi(expirationTimeStr)
 
 	if err != nil {
@@ -57,11 +57,11 @@ func GenerateToken(email string, logger logrus.FieldLogger) (string, string, err
 	return token, refreshToken, nil
 }
 func ValidateToken(tokenStr string) (*jwt.StandardClaims, error) {
-	dir, err := os.Getwd()
-	//rootDir := filepath.Join(dir, "../..")
-	envPath := filepath.Join(dir, ".env") //For container replace rootDir for dir and for local use rootDIr
-	viper.SetConfigFile(envPath)
-	key := viper.GetString("SECRET_KEY")
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		logrus.Warn("Layer: jwt ", "Error al cargar el archivo .env:", err)
+	}
+	key := os.Getenv("SECRET_KEY")
 	secretKey := []byte(key)
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
