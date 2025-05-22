@@ -41,6 +41,18 @@ func NewUserService(repo repository_user.UserRepository, logger logrus.FieldLogg
 
 func (s *userService) CreateUser(ctx context.Context, user entities.User) (entities.User, error) {
 
+	existingUser, err := s.repository.GetUserByEmail(user.Email, ctx)
+	if err == nil && existingUser.Email != "" {
+		s.logger.Errorln("Layer: user_services", "Method: CreateUser", "Error:", ErrEmailAlreadyExists)
+		return entities.User{}, ErrEmailAlreadyExists
+	}
+
+	existingUserByDNI, err := s.repository.GetUserByDNI(user.DNI, ctx)
+	if err == nil && existingUserByDNI.DNI != 0 {
+		s.logger.Errorln("Layer: user_services", "Method: CreateUser", "Error:", ErrDNIAlreadyExists)
+		return entities.User{}, ErrDNIAlreadyExists
+	}
+
 	if err := s.validate.Struct(user); err != nil {
 		s.logger.Errorln("Layer: user_services", "Method: CreateUser", "Error:", err)
 		fmt.Println("error:", err)

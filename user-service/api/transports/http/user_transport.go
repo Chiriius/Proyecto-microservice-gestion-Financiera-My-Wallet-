@@ -115,6 +115,12 @@ func CustomErrorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
 	case errors.Is(err, infraestructure_repository.ErrLoadingDatabase):
 		statusCode = http.StatusInternalServerError
 		errorMessage = infraestructure_repository.ErrLoadingDatabase.Error()
+	case errors.Is(err, services.ErrEmailAlreadyExists):
+		statusCode = http.StatusBadRequest
+		errorMessage = services.ErrEmailAlreadyExists.Error()
+	case errors.Is(err, services.ErrDNIAlreadyExists):
+		statusCode = http.StatusBadRequest
+		errorMessage = services.ErrDNIAlreadyExists.Error()
 
 	default:
 		statusCode = http.StatusInternalServerError
