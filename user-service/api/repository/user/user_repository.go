@@ -15,6 +15,7 @@ type UserRepository interface {
 	CreateUser(user entities.User, ctx context.Context) (entities.User, error)
 	GetUser(id string, ctx context.Context) (entities.User, error)
 	GetUserByEmail(email string, ctx context.Context) (entities.User, error)
+	GetUserByDNI(dni int, ctx context.Context) (entities.User, error)
 	DeleteUser(id string, ctx context.Context) error
 	UpdateUser(userUpr entities.User, ctx context.Context) (entities.User, error)
 	SoftDeleteUser(id string, ctx context.Context) error
@@ -73,6 +74,24 @@ func (repo *MongoUserRepositoy) GetUser(id string, ctx context.Context) (entitie
 func (repo *MongoUserRepositoy) GetUserByEmail(email string, ctx context.Context) (entities.User, error) {
 	var user entities.User
 	filter := bson.D{{"email", email}}
+	opts := options.FindOne()
+	coll := repo.db.Database("mywallet").Collection("users")
+
+	err := coll.FindOne(ctx, filter, opts).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return user, ErrUserNotfound
+		}
+		return user, err
+	}
+	if user.Enabled != true {
+		return entities.User{}, ErrDisbledUser
+	}
+	return user, nil
+}
+func (repo *MongoUserRepositoy) GetUserByDNI(dni int, ctx context.Context) (entities.User, error) {
+	var user entities.User
+	filter := bson.D{{"dni", dni}}
 	opts := options.FindOne()
 	coll := repo.db.Database("mywallet").Collection("users")
 

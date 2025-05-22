@@ -45,6 +45,8 @@ func TestCreateUserService(t *testing.T) {
 
 			mockError: nil,
 			configureMock: func(m *userServiceMock, mockResponse entities.User, mockError error) {
+				m.On("GetUserByEmail", mock.Anything, "alexer@gmail.com").Return(entities.User{}, nil)
+				m.On("GetUserByDNI", mock.Anything, 34).Return(entities.User{}, nil)
 				m.On("CreateUser", mock.Anything, mock.AnythingOfType("entities.User")).Return(mockResponse, mockError)
 			},
 			expectedOutput: entities.User{
@@ -75,9 +77,10 @@ func TestCreateUserService(t *testing.T) {
 			mockContext:   context.Background(),
 			mockValidator: validator.New(),
 			mockLogger:    logrus.StandardLogger(),
-
-			mockError: ErrNameSpecialCharacters,
+			mockError:     ErrNameSpecialCharacters,
 			configureMock: func(m *userServiceMock, mockResponse entities.User, mockError error) {
+				m.On("GetUserByEmail", mock.Anything, "alexer@gmail.com").Return(entities.User{}, nil)
+				m.On("GetUserByDNI", mock.Anything, 34).Return(entities.User{}, nil)
 				m.On("CreateUser", mock.Anything, mock.AnythingOfType("entities.User")).Return(mockResponse, mockError)
 			},
 			expectedOutput: entities.User{},
@@ -102,6 +105,8 @@ func TestCreateUserService(t *testing.T) {
 
 			mockError: ErrLenghtPassword,
 			configureMock: func(m *userServiceMock, mockResponse entities.User, mockError error) {
+				m.On("GetUserByEmail", mock.Anything, "alexer@gmail.com").Return(entities.User{}, nil)
+				m.On("GetUserByDNI", mock.Anything, 34).Return(entities.User{}, nil)
 				m.On("CreateUser", mock.Anything, mock.AnythingOfType("entities.User")).Return(mockResponse, mockError)
 			},
 			expectedOutput: entities.User{},
@@ -126,6 +131,8 @@ func TestCreateUserService(t *testing.T) {
 
 			mockError: ErrLenghPhone,
 			configureMock: func(m *userServiceMock, mockResponse entities.User, mockError error) {
+				m.On("GetUserByEmail", mock.Anything, "alexer@gmail.com").Return(entities.User{}, nil)
+				m.On("GetUserByDNI", mock.Anything, 34).Return(entities.User{}, nil)
 				m.On("CreateUser", mock.Anything, mock.AnythingOfType("entities.User")).Return(mockResponse, mockError)
 			},
 			expectedOutput: entities.User{},
@@ -150,6 +157,8 @@ func TestCreateUserService(t *testing.T) {
 
 			mockError: ErrTypeDNI,
 			configureMock: func(m *userServiceMock, mockResponse entities.User, mockError error) {
+				m.On("GetUserByEmail", mock.Anything, "alexer@gmail.com").Return(entities.User{}, nil)
+				m.On("GetUserByDNI", mock.Anything, 34).Return(entities.User{}, nil)
 				m.On("CreateUser", mock.Anything, mock.AnythingOfType("entities.User")).Return(mockResponse, mockError)
 			},
 			expectedOutput: entities.User{},

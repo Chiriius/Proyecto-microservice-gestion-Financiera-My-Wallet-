@@ -35,8 +35,12 @@ func (m *userServiceMock) SoftDeleteUser(id string, ctx context.Context) error {
 }
 
 func (m *userServiceMock) GetUserByEmail(email string, ctx context.Context) (entities.User, error) {
-
 	r := m.Called(ctx, email)
+	return r.Get(0).(entities.User), r.Error(1)
+}
+func (m *userServiceMock) GetUserByDNI(dni int, ctx context.Context) (entities.User, error) {
+
+	r := m.Called(ctx, dni)
 	return r.Get(0).(entities.User), r.Error(1)
 
 }
