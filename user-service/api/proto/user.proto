@@ -1,0 +1,98 @@
+//filepath: user-service/api/proto/user.proto
+
+syntax = "proto3";
+
+package user;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "user-service/api/proto;userpb";
+
+message User {
+    string id = 1;
+    string typeDNI = 2;
+    int64 dni = 3;
+    string name = 4;
+    string email = 5;
+    string password = 6;
+    string address = 7;
+    int64 phone = 8;
+    bool enabled = 9;
+    string token = 10;
+    google.protobuf.Timestamp created_at = 11;
+    string refresh_token = 12;
+    google.protobuf.Timestamp update_at = 13;
+}
+
+service UserService {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserREsponse);
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+    rpc SoftDeleteUser(SoftDeleteUserRequest) returns (SoftDeleteUserResponse);
+}
+
+message LoginUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    bool stateLogin = 1;
+    string token = 2;
+    string error = 3;
+}
+
+message CreateUserRequest{
+    int64 dni = 1;
+    string typeDNI = 2;
+    string name = 3;
+    string email = 4;
+    string password = 5;
+    string address = 6;
+    int64 phone = 7;
+}
+
+message CreateUserResponse{
+    string id = 1;
+    string token = 2;
+    string error = 3;
+}
+
+message UpdateUserRequest{
+    string id = 1;
+    string typeDNI = 2;
+    int64 dni = 3;
+    string name = 4;
+    string email = 5;
+    string password = 6;
+    string address = 7;
+    int64 phone = 8;
+}
+
+message UpdateUserREsponse{
+    User user = 1;
+    string error = 2;
+}
+
+message GetUserRequest{
+    string id = 1;
+}
+message GetUserResponse{
+    User user = 1;
+    string error = 2;
+}
+message DeleteUserRequest{
+    string id = 1;
+}
+message DeleteUserResponse{
+    string error = 2;
+}
+message SoftDeleteUserRequest{
+    string id = 1;
+}
+message SoftDeleteUserResponse{
+    string error = 1;
+}
+

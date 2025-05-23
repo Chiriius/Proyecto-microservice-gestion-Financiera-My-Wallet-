@@ -2,14 +2,19 @@ package server
 
 import (
 	"context"
+	"fmt"
 	_ "my_wallet/api/cmd/docs"
 	"my_wallet/api/endpoints"
 	infraestructure_repository "my_wallet/api/repository/healtcheck"
 	repository_user "my_wallet/api/repository/user"
+	"net"
 
+	pb "my_wallet/api/proto"
 	infraestructure_services "my_wallet/api/services/healtcheck"
 	services "my_wallet/api/services/user"
+	transport_grpc "my_wallet/api/transports/grpc"
 	transports "my_wallet/api/transports/http"
+
 	"net/http"
 	"os"
 
@@ -17,16 +22,19 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 type Server struct {
 	dbMongo  *mongo.Client
 	httpMux  *http.ServeMux
 	httpAddr string
+	grpcSrv  *grpc.Server
+	grpcAddr string
 	logger   logrus.FieldLogger
 }
 
-func New(logger logrus.FieldLogger, httpAddr, dburl string, ctx context.Context) (*Server, error) {
+func New(logger logrus.FieldLogger, httpAddr, grpcAddr, dburl string, ctx context.Context) (*Server, error) {
 	db := GetMongoDB(ctx, dburl)
 
 	healtCheckRepository := infraestructure_repository.NewMongoUserREpository(db, logger)
@@ -35,6 +43,7 @@ func New(logger logrus.FieldLogger, httpAddr, dburl string, ctx context.Context)
 	userService := services.NewUserService(userRepository, logger, ctx)
 	userEnpoints := endpoints.MakeServerEndpoints(userService, healtCheckService, logger)
 	httpHandler := transports.NewHTTPHandler(userEnpoints, logger)
+	grpcServer := transport_grpc.NewGRPCServer(userEnpoints, logger)
 
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/", httpHandler)
@@ -43,21 +52,49 @@ func New(logger logrus.FieldLogger, httpAddr, dburl string, ctx context.Context)
 		http.ServeFile(w, r, "/app/api/cmd/docs/swagger.json")
 	})
 
+	baseServerGrpc := grpc.NewServer()
+	pb.RegisterUserServiceServer(baseServerGrpc, grpcServer)
+
 	return &Server{
 		dbMongo:  db,
 		httpMux:  httpMux,
+		grpcSrv:  baseServerGrpc,
+		grpcAddr: grpcAddr,
 		httpAddr: httpAddr,
+		logger:   logger,
 	}, nil
 }
 
 func (s *Server) Start() error {
-
-	logrus.Infoln("Layel:Server ", " Method: Start", "Port:", s.httpAddr)
-	if err := http.ListenAndServe(s.httpAddr, s.httpMux); err != nil {
-		logrus.Fatalf("HTTP server failed: %v", err)
+	if s.httpAddr == "" {
+		s.logger.Error("Layer:Server Method:Start ", "httpAddr no está definido")
+		return fmt.Errorf("httpAddr no está definido")
+	}
+	if s.httpMux == nil {
+		return fmt.Errorf("httpMux no está inicializado")
+	}
+	if s.logger == nil {
+		return fmt.Errorf("logger no está inicializado")
 	}
 
-	return nil
+	go func() {
+		s.logger.Infoln("Layer:Server Method:Start ", "Starting HTTP server on ", s.httpAddr)
+		if err := http.ListenAndServe(s.httpAddr, s.httpMux); err != nil {
+			s.logger.Fatalf("Layer:Server Method:Start ", "Failed to start HTTP server: %v", err)
+		}
+	}()
+
+	lis, err := net.Listen("tcp", s.grpcAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start gRPC listener: %v", err)
+	}
+	s.logger.Infoln("Layer:Server Method:Start ", "Starting gRPC server on ", s.grpcAddr)
+	return s.grpcSrv.Serve(lis)
+}
+
+func (s *Server) Close() error {
+	s.grpcSrv.GracefulStop()
+	return s.dbMongo.Disconnect(context.TODO())
 }
 
 func GetMongoDB(ctx context.Context, dburl string) *mongo.Client {
