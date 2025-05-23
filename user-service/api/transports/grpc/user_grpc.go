@@ -2,30 +2,33 @@ package transport_grpc
 
 import (
 	"context"
+	"fmt"
 	"my_wallet/api/endpoints"
 
 	pb "my_wallet/api/proto"
 
 	gt "github.com/go-kit/kit/transport/grpc"
+	"github.com/sirupsen/logrus"
 )
 
 type gRPCServer struct {
 	createUser     gt.Handler
-	login          gt.Handler
+	loginUser      gt.Handler
 	getUser        gt.Handler
 	deleteUser     gt.Handler
 	updateUser     gt.Handler
 	softDeleteUser gt.Handler
+	pb.UnimplementedUserServiceServer
 }
 
-func NewGRPCServer(endpoints endpoints.Endpoints) *gRPCServer {
+func NewGRPCServer(endpoints endpoints.Endpoints, logger logrus.FieldLogger) pb.UserServiceServer {
 	return &gRPCServer{
 		createUser: gt.NewServer(
 			endpoints.CreateUser,
 			decodeCreateUserRequest,
 			encodeCreateUserResponse,
 		),
-		login: gt.NewServer(
+		loginUser: gt.NewServer(
 			endpoints.Login,
 			decodeLoginUserRequest,
 			encodeLoginUserResponse,
@@ -53,6 +56,8 @@ func NewGRPCServer(endpoints endpoints.Endpoints) *gRPCServer {
 	}
 }
 
+func (s *gRPCServer) mustEmbedUnimplementedUserServiceServer() {}
+
 func (s *gRPCServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	_, resp, err := s.createUser.ServeGRPC(ctx, req)
 	if err != nil {
@@ -60,8 +65,8 @@ func (s *gRPCServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 	}
 	return resp.(*pb.CreateUserResponse), nil
 }
-func (s *gRPCServer) Login(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	_, resp, err := s.login.ServeGRPC(ctx, req)
+func (s *gRPCServer) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	_, resp, err := s.loginUser.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +114,16 @@ func decodeCreateUserRequest(_ context.Context, request interface{}) (interface{
 	}, nil
 }
 func encodeCreateUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.CreateUserResponse)
-	return &pb.CreateUserResponse{Id: resp.Id, Token: resp.Token, Error: resp.Error}, nil
+	resp, ok := response.(endpoints.CreateUserResponse)
+	if !ok {
+		return nil, fmt.Errorf("invalid response type: expected CreateUserResponse, got %T", response)
+	}
+
+	return &pb.CreateUserResponse{
+		Id:    resp.ID,
+		Token: resp.Token,
+		Error: resp.Err,
+	}, nil
 }
 func decodeLoginUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.LoginUserRequest)
@@ -120,8 +133,8 @@ func decodeLoginUserRequest(_ context.Context, request interface{}) (interface{}
 	}, nil
 }
 func encodeLoginUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.LoginUserResponse)
-	return &pb.LoginUserResponse{Token: resp.Token, Error: resp.Error}, nil
+	resp := response.(endpoints.LoginUserResponse)
+	return &pb.LoginUserResponse{Token: resp.Token, Error: resp.Err}, nil
 }
 func decodeGetUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.GetUserRequest)
@@ -130,20 +143,19 @@ func decodeGetUserRequest(_ context.Context, request interface{}) (interface{}, 
 	}, nil
 }
 func encodeGetUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.GetUserResponse)
+	resp := response.(endpoints.GetUserResponse)
 	user := &pb.User{
-		Id:        resp.User.Id,
-		Dni:       int32(resp.User.Dni),
-		TypeDNI:   resp.User.TypeDNI,
-		Name:      resp.User.Name,
-		Email:     resp.User.Email,
-		Address:   resp.User.Address,
-		Phone:     int32(resp.User.Phone),
-		CreatedAt: resp.User.CreatedAt,
+		Id:      resp.User.ID,
+		Dni:     int64(resp.User.DNI),
+		TypeDNI: resp.User.TypeDNI,
+		Name:    resp.User.Name,
+		Email:   resp.User.Email,
+		Address: resp.User.Address,
+		Phone:   int64(resp.User.Phone),
 	}
 	return &pb.GetUserResponse{
 		User:  user,
-		Error: resp.Error,
+		Error: resp.Err,
 	}, nil
 }
 func decodeDeleteUserRequest(_ context.Context, request interface{}) (interface{}, error) {
@@ -153,8 +165,8 @@ func decodeDeleteUserRequest(_ context.Context, request interface{}) (interface{
 	}, nil
 }
 func encodeDeleteUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.DeleteUserResponse)
-	return &pb.DeleteUserResponse{Error: resp.Error}, nil
+	resp := response.(endpoints.DeleteUserResponse)
+	return &pb.DeleteUserResponse{Error: resp.Err}, nil
 }
 func decodeUpdateRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.UpdateUserRequest)
@@ -170,18 +182,17 @@ func decodeUpdateRequest(_ context.Context, request interface{}) (interface{}, e
 	}, nil
 }
 func encodeUpdateUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.UpdateUserREsponse)
+	resp := response.(endpoints.UpdateUserREsponse)
 	user := &pb.User{
-		Id:        resp.User.Id,
-		Dni:       int32(resp.User.Dni),
-		TypeDNI:   resp.User.TypeDNI,
-		Name:      resp.User.Name,
-		Email:     resp.User.Email,
-		Address:   resp.User.Address,
-		Phone:     int32(resp.User.Phone),
-		CreatedAt: resp.User.CreatedAt,
+		Id:      resp.User.ID,
+		Dni:     int64(resp.User.DNI),
+		TypeDNI: resp.User.TypeDNI,
+		Name:    resp.User.Name,
+		Email:   resp.User.Email,
+		Address: resp.User.Address,
+		Phone:   int64(resp.User.Phone),
 	}
-	return &pb.UpdateUserREsponse{User: user, Error: resp.Error}, nil
+	return &pb.UpdateUserREsponse{User: user, Error: resp.Err}, nil
 }
 func decodeSoftDeleteUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.SoftDeleteUserRequest)
@@ -190,6 +201,6 @@ func decodeSoftDeleteUserRequest(_ context.Context, request interface{}) (interf
 	}, nil
 }
 func encodeSoftDeleteUserResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.SoftDeleteUserResponse)
-	return &pb.SoftDeleteUserResponse{Error: resp.Error}, nil
+	resp := response.(endpoints.SoftDeleteUserResponse)
+	return &pb.SoftDeleteUserResponse{Error: resp.Err}, nil
 }

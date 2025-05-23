@@ -11,12 +11,12 @@ option go_package = "user-service/api/proto;userpb";
 message User {
     string id = 1;
     string typeDNI = 2;
-    int32 dni = 3;
+    int64 dni = 3;
     string name = 4;
     string email = 5;
     string password = 6;
     string address = 7;
-    int32 phone = 8;
+    int64 phone = 8;
     bool enabled = 9;
     string token = 10;
     google.protobuf.Timestamp created_at = 11;
@@ -45,13 +45,13 @@ message LoginUserResponse {
 }
 
 message CreateUserRequest{
-    int32 dni = 1;
+    int64 dni = 1;
     string typeDNI = 2;
     string name = 3;
     string email = 4;
     string password = 5;
     string address = 6;
-    int32 phone = 7;
+    int64 phone = 7;
 }
 
 message CreateUserResponse{
@@ -63,12 +63,12 @@ message CreateUserResponse{
 message UpdateUserRequest{
     string id = 1;
     string typeDNI = 2;
-    int32 dni = 3;
+    int64 dni = 3;
     string name = 4;
     string email = 5;
     string password = 6;
     string address = 7;
-    int32 phone = 8;
+    int64 phone = 8;
 }
 
 message UpdateUserREsponse{
