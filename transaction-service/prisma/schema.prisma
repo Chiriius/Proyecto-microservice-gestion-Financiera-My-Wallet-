@@ -23,7 +23,7 @@ model User {
 }
 
 model Account {
-  id          String        @id @default(cuid())
+  id          String        @id @default(uuid())
   userId      String
   balance     Float
   accountName String
@@ -34,7 +34,7 @@ model Account {
 }
 
 model Transaction {
-  id              String   @id @default(cuid())
+  id              String   @id @default(uuid())
   accountId       String
   amount          Float
   transactionType String[]
