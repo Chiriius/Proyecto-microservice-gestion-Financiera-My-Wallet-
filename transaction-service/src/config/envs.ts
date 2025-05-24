@@ -7,6 +7,6 @@ dotenv.config({path: '../.env'});
 
 
 export const envs = {
-    PORT: get('PORTSERVICE_TRANSACTION') || 3000,
+    PORT: get('PORTSERVICE_TRANSACTION').required().asPortNumber(),
     DATABASE_URL_POSTGRESQL_TRANSACTIONS: get('DATABASE_URL_POSTGRESQL_TRANSACTIONS').required().asString(),
 }
