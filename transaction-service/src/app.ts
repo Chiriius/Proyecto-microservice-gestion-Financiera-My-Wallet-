@@ -1,6 +1,7 @@
 import { envs } from "./config/envs";
 import { prisma } from "./domain/entities/prisma.client";
 import { AppRoutes } from "./presentation/routes";
+import { AppGrpcRoutes } from "./presentation/routes.grpc";
 import { Server } from "./presentation/server";
 
 (async () => {
@@ -10,14 +11,17 @@ import { Server } from "./presentation/server";
 async function main() {
     try {
         await prisma.$connect();
-        console.log('Conexión a PostgreSQL establecida correctamente.');
+        console.log("Conexión a PostgreSQL establecida correctamente.");
 
         new Server({
-            port: envs.PORT,
+            port: envs.PORT, 
+            grpcPort: envs.GRPC_PORT, 
             routes: AppRoutes.routes,
+            protoPath: __dirname + "/presentation/proto/account.proto",
+            grpcService: AppGrpcRoutes.grpcServices,
         }).start();
     } catch (error) {
-        console.error('Error al iniciar la aplicación:', error);
+        console.error("Error al iniciar la aplicación:", error);
         process.exit(1); 
     }
 }
