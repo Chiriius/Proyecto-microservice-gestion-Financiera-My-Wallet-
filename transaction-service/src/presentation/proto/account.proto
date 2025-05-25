@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package account;
+
+service AccountService {
+  rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+}
+
+message CreateAccountRequest {
+  string userId = 1;
+  float balance = 2;
+  string accountName = 3;
+}
+
+message CreateAccountResponse {
+  string id = 1;
+  string userId = 2;
+  float balance = 3;
+  string accountName = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+}
