@@ -9,4 +9,5 @@ dotenv.config({path: '../.env'});
 export const envs = {
     PORT: get('PORTSERVICE_TRANSACTION').required().asPortNumber(),
     DATABASE_URL_POSTGRESQL_TRANSACTIONS: get('DATABASE_URL_POSTGRESQL_TRANSACTIONS').required().asString(),
+    GRPC_PORT: get('GRPC_PORT').required().asPortNumber(),
 }
