@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	Port                      string
-	AccountServiceAddress     string
-	TransactionServiceAddress string
+	Port                  string
+	AccountServiceAddress string
+	UserServiceAddress    string
 }
 
 func Load() *Config {
@@ -22,6 +22,7 @@ func Load() *Config {
 	return &Config{
 		Port:                  getEnv("PORT_GATEWAY", "8080"),
 		AccountServiceAddress: getEnv("ACCOUNT_SERVICE_ADDRESS", "localhost:50052"),
+		UserServiceAddress:    getEnv("USER_SERVICE_ADDRESS", "localhost:50051"),
 	}
 }
 
