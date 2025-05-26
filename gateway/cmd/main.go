@@ -13,9 +13,10 @@ func main() {
 
 	// Inicializar clientes gRPC
 	accountClient := clients.NewAccountClient(cfg.AccountServiceAddress)
+	userClient := clients.NewUserClient(cfg.UserServiceAddress)
 
 	// Iniciar servidor HTTP
-	router := http.NewRouter(accountClient)
+	router := http.NewRouter(accountClient, userClient)
 	log.Printf("Servidor HTTP ejecutándose en el puerto %s", cfg.Port)
 	router.Run(":" + cfg.Port)
 }
