@@ -1,4 +1,4 @@
-import { envs } from "./config/envs";
+import { envs, loadSecrets } from "./config/envs";
 import { prisma } from "./domain/entities/prisma.client";
 import { AppRoutes } from "./presentation/routes";
 import { AppGrpcRoutes } from "./presentation/routes.grpc";
@@ -10,6 +10,7 @@ import { Server } from "./presentation/server";
 
 async function main() {
     try {
+        await loadSecrets();
         await prisma.$connect();
         console.log("Conexión a PostgreSQL establecida correctamente.");
 
