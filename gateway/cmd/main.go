@@ -8,15 +8,17 @@ import (
 )
 
 func main() {
-	// Cargar configuración
+
 	cfg := config.Load()
 
-	// Inicializar clientes gRPC
-	accountClient := clients.NewAccountClient(cfg.AccountServiceAddress)
-	userClient := clients.NewUserClient(cfg.UserServiceAddress)
+	accountAddr := cfg.Secrets["ACCOUNT_SERVICE_ADDRESS"]
+	userAddr := cfg.Secrets["USER_SERVICE_ADDRESS"]
+	port := cfg.Secrets["PORT_GATEWAY"]
 
-	// Iniciar servidor HTTP
+	accountClient := clients.NewAccountClient(accountAddr)
+	userClient := clients.NewUserClient(userAddr)
+
 	router := http.NewRouter(accountClient, userClient)
-	log.Printf("Servidor HTTP ejecutándose en el puerto %s", cfg.Port)
-	router.Run(":" + cfg.Port)
+	log.Printf("Servidor HTTP ejecutándose en el puerto %s", port)
+	router.Run(":" + port)
 }
