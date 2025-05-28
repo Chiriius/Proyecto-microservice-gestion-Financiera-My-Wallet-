@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
+	"my_wallet/api/config"
 	"my_wallet/api/server"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,35 +18,27 @@ func main() {
 	logger := logrus.StandardLogger()
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
-	err := godotenv.Load("../../../.env")
-	if err != nil {
-		logrus.Panic("Layer: main ", "Error al cargar el archivo .env:", err)
+	cfg := config.Load()
+
+	httpAddr := cfg.Secrets["SERVER_PORT_HTTP"]
+	grpcAddr := cfg.Secrets["SERVER_PORT_GRPC"]
+	dbURL := cfg.Secrets["DB_URL"]
+
+	if httpAddr == "" || grpcAddr == "" || dbURL == "" {
+		logger.Panic("Layer: main ", "Faltan variables de entorno críticas en Vault")
 	}
 
-	enviromentsVariables := map[string]string{
-		"SERVER_PORT_HTTP": os.Getenv("SERVER_PORT_HTTP"),
-		"DB_URL":           os.Getenv("DB_URL"),
-		"SERVER_PORT_GRPC": os.Getenv("SERVER_PORT_GRPC"),
-	}
+	logger.Infof("HTTP Address: %s", httpAddr)
+	logger.Infof("gRPC Address: %s", grpcAddr)
+	logger.Infof("Database URL: %s", dbURL)
 
-	entries, err := os.ReadDir("./")
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	for _, e := range entries {
-		logrus.Info(e.Name())
-	}
-
-	httpAddr := enviromentsVariables["SERVER_PORT_HTTP"]
-	grpc := enviromentsVariables["SERVER_PORT_GRPC"]
-	dburl := enviromentsVariables["DB_URL"]
-	srv, err := server.New(logger, httpAddr, grpc, dburl, ctx)
+	srv, err := server.New(logger, httpAddr, grpcAddr, dbURL, ctx)
 	if err != nil {
 		logger.Panic("Layer: main ", "Failed to create server:", err)
 	}
 
 	defer srv.Close()
+
 	if err := srv.Start(); err != nil {
 		logger.Error(err)
 	}
