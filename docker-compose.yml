@@ -1,5 +1,17 @@
 version: '3.8'
 services:
+  vault:
+    image: hashicorp/vault:latest    
+    container_name: vault
+    ports:
+      - "8200:8200" 
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+      VAULT_DEV_LISTEN_ADDRESS: ${VAULT_DEV_LISTEN_ADDRESS}
+      VAULT_ADDR: ${VAULT_ADDRESS} 
+    command: "server -dev" 
+    networks:
+      - mywallet
 
   dbmywallet:
     image: mongo:noble
